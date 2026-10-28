@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>六级词汇打卡｜CET-6</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#20243a;--muted:#73788d;--accent:#635bdb;--line:#e7e8f1;--good:#18866b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:linear-gradient(135deg,#5148c9,#9388f5);color:white;padding:28px 18px 32px}
+.wrap{max-width:900px;margin:auto;padding:0 16px}h1{font-size:27px;margin:0 0 6px}header p{margin:0;opacity:.9}
+main{padding:18px 0 50px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:-18px}
+.stat,.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 18px #26264a08}
+.stat strong{display:block;font-size:25px}.stat span{font-size:13px;color:var(--muted)}
+.tabs{display:flex;gap:8px;overflow:auto;margin:18px 0}.tab,button{border:0;border-radius:10px;padding:10px 14px;background:#eeedff;color:#5148c9;font-weight:650;cursor:pointer}
+.tab.active,button.primary{background:var(--accent);color:white}.tab{white-space:nowrap}
+.panel{margin:12px 0}.hidden{display:none!important}h2{font-size:19px;margin:0 0 12px}label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+input,textarea,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
+textarea{min-height:76px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.word{font-size:32px;font-weight:750;letter-spacing:.2px}.phonetic{color:var(--muted);font-size:14px}.meaning{font-size:20px;margin:10px 0}
+.prompt{background:#f7f6ff;border-radius:14px;padding:22px;text-align:center;margin:10px 0}.muted{color:var(--muted);font-size:14px}.progress{height:8px;background:#eeedf6;border-radius:8px;overflow:hidden}.progress div{height:100%;background:var(--accent);width:0}
+.wordlist{display:grid;gap:8px}.worditem{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:10px}.worditem b{font-size:17px}.worditem small{display:block;color:var(--muted)}.worditem button{padding:6px 9px}
+button.secondary{background:#f0f1f6;color:#454960}button.danger{background:#fff0f0;color:#b62f42}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+@media(max-width:560px){.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:21px}.row{grid-template-columns:1fr}.word{font-size:27px}}
+</style></head>
+<body>
+<header><div class="wrap"><h1>六级词汇打卡</h1><p>面向 2026 年 12 月 CET-6 · 每天一点，靠间隔复习记牢</p></div></header>
+<main class="wrap">
+<div class="stats"><div class="stat"><strong id="total">0</strong><span>词库总量</span></div><div class="stat"><strong id="due">0</strong><span>今日待复习</span></div><div class="stat"><strong id="learned">0</strong><span>已掌握（暂定）</span></div></div>
+<div class="tabs"><button class="tab active" data-tab="review">今日背词</button><button class="tab" data-tab="add">添加单词</button><button class="tab" data-tab="list">我的词库</button><button class="tab" data-tab="plan">备考安排</button></div>
+<section id="review" class="panel"><h2>今日复习</h2><div class="progress"><div id="bar"></div></div><p class="muted" id="counter">先添加单词，开始你的第一轮复习。</p>
+<div class="prompt"><div class="word" id="front">准备好了吗？</div><div class="phonetic" id="phonetic"></div><div id="answer" class="hidden"><div class="meaning" id="meaning"></div><div class="muted" id="example"></div></div></div>
+<div class="actions" id="revealActions"><button class="primary" id="reveal">显示释义</button></div>
+<div class="actions hidden" id="rateActions"><button class="danger" id="again">没记住 · 今天再练</button><button class="secondary" id="hard">有点模糊</button><button class="primary" id="good">记住了</button></div>
+</section>
+<section id="add" class="panel hidden"><h2>添加新词</h2><p class="muted">建议每天新增 25–35 个；词义、音标和例句可按需填写。</p>
+<label>英文单词 *</label><input id="en" placeholder="例如: maintain">
+<div class="row"><div><label>中文释义 *</label><input id="zh" placeholder="例如: 维持；维护"></div><div><label>音标（选填）</label><input id="ph" placeholder="/meɪnˈteɪn/"></div></div>
+<label>例句（选填）</label><textarea id="ex" placeholder="例句或自己的联想"></textarea>
+<div class="actions"><button class="primary" id="save">保存单词</button><button class="secondary" id="bulkToggle">批量导入</button></div>
+<div id="bulkArea" class="hidden"><label>每行一词，格式：英文,中文释义,音标,例句（逗号分隔）</label><textarea id="bulk" placeholder="maintain,维持；维护,,We must maintain quality.&#10;significant,重要的；显著的,,"></textarea><button class="primary" id="import">导入这些词</button></div>
+</section>
+<section id="list" class="panel hidden"><h2>我的词库</h2><input id="search" placeholder="搜索单词或释义…"><div class="actions"><button class="secondary" id="export">导出备份</button><label style="margin:0"><button class="secondary" id="importFileBtn">导入备份文件</button><input id="importFile" type="file" accept=".json,application/json" class="hidden"></label><button class="danger" id="clear">清空词库</button></div><div class="wordlist" id="wordlist" style="margin-top:12px"></div></section>
+<section id="plan" class="panel hidden"><h2>从现在到 12 月考试的节奏</h2>
+<p>以每天 5 小时为基准。词汇复习采用简化间隔：学习当天、次日、第 3 天、第 7 天、第 15 天、第 30 天；如果忘了，重新安排到当天稍后复习。间隔是实用计划，不是每个人都完全相同的“遗忘曲线”。</p>
+<div class="wordlist">
+<div class="worditem"><div><b>10/28–11/10｜打底</b><small>每天新词 30 个；旧词按到期清单复习。每周 1 次听力/阅读小练，建立错题本。</small></div></div>
+<div class="worditem"><div><b>11/11–11/24｜题型训练</b><small>每天新词 25–30 个；每周 1 套真题分模块完成，听力精听、阅读限时，写译各练 2 次。</small></div></div>
+<div class="worditem"><div><b>11/25–12/8｜真题强化</b><small>每天新词 15–20 个，优先复习错词；每周 2 套真题（至少 1 套严格计时），逐题复盘。</small></div></div>
+<div class="worditem"><div><b>考前最后一周｜稳定发挥</b><small>不盲目堆新词；复习高频错词与作文模板框架，做 1 套完整模拟并调整作息。</small></div></div></div>
+<h2 style="margin-top:18px">每天 5 小时分配</h2><p>背词/复习 60 分钟 · 听力 75 分钟 · 阅读 75 分钟 · 写作 35 分钟 · 翻译 35 分钟 · 错题复盘 20 分钟。</p>
+<p class="muted">提醒：考试具体日期以官方准考证/公告为准。你的“420 分”可作为初始参考；两周后根据真题正确率调整强度。</p></section>
+<footer>数据保存在当前浏览器本地；请定期导出 JSON 备份。更换设备或清理浏览器数据前先备份。</footer>
+</main>
+<script>
+const KEY='cet6_vocab_v1';
+let words=JSON.parse(localStorage.getItem(KEY)||'[]'), queue=[], idx=0, revealed=false, done=0;
+const $=id=>document.getElementById(id);
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const addDays=(n)=>{const d=new Date();d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+function save(){localStorage.setItem(KEY,JSON.stringify(words));renderStats();renderList();makeQueue()}
+function renderStats(){$('total').textContent=words.length;$('due').textContent=words.filter(w=>!w.next||w.next<=today()).length;$('learned').textContent=words.filter(w=>w.stage>=4).length}
+function makeQueue(){queue=words.filter(w=>!w.next||w.next<=today()).sort((a,b)=>(a.next||'').localeCompare(b.next||''));idx=0;done=0;showCard()}
+function showCard(){revealed=false;$('answer').classList.add('hidden');$('revealActions').classList.remove('hidden');$('rateActions').classList.add('hidden');
+$('bar').style.width=(queue.length?done/queue.length*100:0)+'%';$('counter').textContent=queue.length?`今日第 ${Math.min(idx+1,queue.length)} / ${queue.length} 个待复习`:'今天没有到期单词。可以去添加新词，或休息一下！';
+if(!queue.length||idx>=queue.length){$('front').textContent='今日任务完成 🎉';$('phonetic').textContent='';$('meaning').textContent='';$('example').textContent='';$('revealActions').classList.add('hidden');$('rateActions').classList.add('hidden');return}
+const w=queue[idx];$('front').textContent=w.en;$('phonetic').textContent=w.ph||'';$('meaning').textContent=w.zh;$('example').textContent=w.ex||''}
+$('reveal').onclick=()=>{$('answer').classList.remove('hidden');$('revealActions').classList.add('hidden');$('rateActions').classList.remove('hidden');revealed=true};
+function rate(kind){const w=queue[idx];if(!w)return;if(kind==='again'){w.next=today();w.stage=0;queue.splice(idx,1);queue.push(w)}else{let gap=kind==='hard'?1:([1,3,7,15,30][Math.min(w.stage,4)]);w.stage=kind==='hard'?Math.max(0,w.stage):Math.min(5,(w.stage||0)+1);w.next=addDays(gap);idx++;done++}
+localStorage.setItem(KEY,JSON.stringify(words));renderStats();showCard()}
+$('again').onclick=()=>rate('again');$('hard').onclick=()=>rate('hard');$('good').onclick=()=>rate('good');
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));['review','add','list','plan'].forEach(t=>$(t).classList.toggle('hidden',t!==b.dataset.tab));if(b.dataset.tab==='review')makeQueue();if(b.dataset.tab==='list')renderList()});
+$('save').onclick=()=>{let en=$('en').value.trim(),zh=$('zh').value.trim();if(!en||!zh){alert('请至少填写英文和中文释义');return}if(words.some(w=>w.en.toLowerCase()===en.toLowerCase())){alert('这个单词已经在词库里啦');return}words.push({id:Date.now()+Math.random(),en,zh,ph:$('ph').value.trim(),ex:$('ex').value.trim(),stage:0,next:today()});['en','zh','ph','ex'].forEach(x=>$(x).value='');save();alert('添加成功！已加入今日复习。')};
+$('bulkToggle').onclick=()=>$('bulkArea').classList.toggle('hidden');
+$('import').onclick=()=>{let lines=$('bulk').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),n=0;for(const line of lines){let [en,zh,ph='',ex='']=line.split(',').map(x=>x.trim());if(en&&zh&&!words.some(w=>w.en.toLowerCase()===en.toLowerCase())){words.push({id:Date.now()+Math.random(),en,zh,ph,ex,stage:0,next:today()});n++}}save();$('bulk').value='';alert(`导入 ${n} 个新词`)}
+function renderList(){let q=($('search').value||'').toLowerCase();$('wordlist').innerHTML='';words.filter(w=>(w.en+' '+w.zh).toLowerCase().includes(q)).sort((a,b)=>a.en.localeCompare(b.en)).forEach(w=>{let d=document.createElement('div');d.className='worditem';let left=document.createElement('div');let b=document.createElement('b');b.textContent=w.en;let sm=document.createElement('small');sm.textContent=w.zh+' · 下次复习：'+(w.next||'今天');left.append(b,sm);let btn=document.createElement('button');btn.className='danger';btn.textContent='删除';btn.onclick=()=>{if(confirm('删除 '+w.en+'？')){words=words.filter(x=>x.id!==w.id);save()}};d.append(left,btn);$('wordlist').append(d)})}
+$('search').oninput=renderList;
+$('export').onclick=()=>{const blob=new Blob([JSON.stringify(words,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cet6-vocab-backup.json';a.click();URL.revokeObjectURL(a.href)};
+$('importFileBtn').onclick=()=>$('importFile').click();
+$('importFile').onchange=async e=>{try{let arr=JSON.parse(await e.target.files[0].text());if(!Array.isArray(arr))throw 0;let n=0;arr.forEach(w=>{if(w.en&&w.zh&&!words.some(x=>x.en.toLowerCase()===w.en.toLowerCase())){words.push({...w,id:Date.now()+Math.random()});n++}});save();alert(`恢复 ${n} 个单词`)}catch{alert('文件格式不正确')}}; 
+$('clear').onclick=()=>{if(confirm('确定清空全部词库？建议先导出备份。')){words=[];save()}};
+renderStats();renderList();makeQueue();
+</script></body></html>
