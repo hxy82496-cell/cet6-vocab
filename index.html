@@ -40,7 +40,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <div class="actions"><button class="primary" id="save">保存单词</button><button class="secondary" id="bulkToggle">批量导入</button></div>
 <div id="bulkArea" class="hidden"><label>每行一词，格式：英文,中文释义,音标,例句（逗号分隔）</label><textarea id="bulk" placeholder="maintain,维持；维护,,We must maintain quality.&#10;significant,重要的；显著的,,"></textarea><button class="primary" id="import">导入这些词</button></div>
 </section>
-<section id="list" class="panel hidden"><h2>我的词库</h2><input id="search" placeholder="搜索单词或释义…"><div class="actions"><button class="secondary" id="export">导出备份</button><label style="margin:0"><button class="secondary" id="importFileBtn">导入备份文件</button><input id="importFile" type="file" accept=".json,application/json" class="hidden"></label><button class="danger" id="clear">清空词库</button></div><div class="wordlist" id="wordlist" style="margin-top:12px"></div></section>
+<section id="list" class="panel hidden"><h2>我的词库</h2><input id="search" placeholder="搜索单词或释义…"><div class="actions"><button class="secondary" id="export">导出备份</button><label style="margin:0"><button class="secondary" id="importFileBtn">导入备份文件</button><input id="importFile" type="file"accept=".json,.txt,.csv,application/json,text/plain,text/csv"class="hidden"></label><button class="danger" id="clear">清空词库</button></div><div class="wordlist" id="wordlist" style="margin-top:12px"></div></section>
 <section id="plan" class="panel hidden"><h2>从现在到 12 月考试的节奏</h2>
 <p>以每天 5 小时为基准。词汇复习采用简化间隔：学习当天、次日、第 3 天、第 7 天、第 15 天、第 30 天；如果忘了，重新安排到当天稍后复习。间隔是实用计划，不是每个人都完全相同的“遗忘曲线”。</p>
 <div class="wordlist">
@@ -77,7 +77,46 @@ function renderList(){let q=($('search').value||'').toLowerCase();$('wordlist').
 $('search').oninput=renderList;
 $('export').onclick=()=>{const blob=new Blob([JSON.stringify(words,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cet6-vocab-backup.json';a.click();URL.revokeObjectURL(a.href)};
 $('importFileBtn').onclick=()=>$('importFile').click();
-$('importFile').onchange=async e=>{try{let arr=JSON.parse(await e.target.files[0].text());if(!Array.isArray(arr))throw 0;let n=0;arr.forEach(w=>{if(w.en&&w.zh&&!words.some(x=>x.en.toLowerCase()===w.en.toLowerCase())){words.push({...w,id:Date.now()+Math.random()});n++}});save();alert(`恢复 ${n} 个单词`)}catch{alert('文件格式不正确')}}; 
+
+$('importFile').onchange=async e=>{
+  const file=e.target.files&&e.target.files[0];
+  if(!file)return;
+  try{
+    const content=await file.text();
+    let arr;
+    if(/\.json$/i.test(file.name)){
+      arr=JSON.parse(content);
+      if(!Array.isArray(arr))throw new Error('JSON格式错误');
+    }else{
+      arr=content.split(/\r?\n/).map(line=>line.trim()).filter(Boolean).map(line=>{
+        const sep=line.includes('\t')?'\t':',';
+        const parts=line.split(sep).map(x=>x.trim());
+        return {en:parts[0]||'',zh:parts[1]||'',ph:parts[2]||'',ex:parts.slice(3).join(sep)};
+      }).filter(w=>w.en&&w.zh);
+    }
+    let n=0,skipped=0;
+    for(const w of arr){
+      if(!w||!w.en||!w.zh){skipped++;continue}
+      const en=String(w.en).trim();
+      const zh=String(w.zh).trim();
+      if(!en||!zh||words.some(x=>String(x.en).toLowerCase()===en.toLowerCase())){skipped++;continue}
+      words.push({
+        id:Date.now()+Math.random(),
+        en,zh,
+        ph:String(w.ph||w.phonetic||'').trim(),
+        ex:String(w.ex||w.example||'').trim(),
+        stage:Number(w.stage)||0,
+        next:w.next||today()
+      });
+      n++;
+    }
+    save();
+    alert('成功导入 '+n+' 个新词'+(skipped?'，跳过 '+skipped+' 个重复或不完整的词':''));
+  }catch(err){
+    alert('文件读取失败。TXT/CSV 每行按“英文,中文释义,音标,例句”排列；JSON 请使用单词对象数组格式。');
+  }
+  $('importFile').value='';
+};
 $('clear').onclick=()=>{if(confirm('确定清空全部词库？建议先导出备份。')){words=[];save()}};
 renderStats();renderList();makeQueue();
 </script></body></html>
